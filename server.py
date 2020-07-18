@@ -3,6 +3,7 @@ import socket
 from packet import Packet
 from match import Match
 from utils import Utils
+from pregame import preGame
 import threading
 import random
 import time
@@ -24,6 +25,7 @@ def server(port):
     games = {}
     un = {}
     wpon = []
+    matches = {}
     utils = Utils()
 
     #Constants
@@ -78,6 +80,18 @@ def server(port):
                 packet.send(i, packet)
             except Exception:
                 remove.append(i)
+
+      if arr[0] == 'create':
+          pid = readint(mes)
+          title = readstring(mes)
+
+          matches[len(matches)] = preGame(pid, len(matches), title)
+
+          send = ids[pid]
+
+          packet.clear()
+          packet.write(2, 'create')
+          packet.send(send, packet)
 
       if arr[0] == 'login':
             vers = readint(mes)
@@ -302,17 +316,16 @@ def server(port):
             if player_id in queue:
                 queue.remove(player_id)
             num = ""
-            for i in games:
-                check = games[i].check(player_id)
+            for i in matches:
+                check = matches[i].leave(player_id)
 
-                if check:
-                    packet = Packet()
-                    packet.clear()
-                    packet.write(2, 'ends')
-                    packet.send(games[i].oth(player_id), packet)
-                    num = i
-            if num != "":
-                games.pop(num)
+                if check != False:
+                    matches.pop(i)
+                    for i in check:
+                        packet = Packet()
+                        packet.clear()
+                        packet.write(2, 'leave')
+                        packet.send(ids[i], packet)
 
             self.close()
 
