@@ -176,6 +176,27 @@ def server(port):
           if pid in queue:
               queue.remove(pid)
 
+      if arr[0] == "join":
+          gn = readint(mes)
+          user = readstring(mes)
+          pid = readint(mes)
+
+          matches[gn].join(user)
+
+      if arr[0] == "list":
+          pid = readint(mes)
+          send = []
+          for i in matches:
+              send.append(matches[i].list())
+          packet.clear()
+          packet.write(2, "list")
+          packet.write(3, len(send))
+          for i in send:
+              packet.write(2, i[0])
+              packet.write(3, i[1])
+          packet.send(ids[pid], packet)
+
+
       if arr[0] == "move":
           xx = readint(mes)
           yy = readint(mes)
@@ -195,39 +216,6 @@ def server(port):
               packet.write(3, yy)
               packet.send(send, packet)
 
-      if arr[0] == "pickup":
-          match = readint(mes)
-          xx = readint(mes)
-          yy = readint(mes)
-          pid = readint(mes)
-
-          if "game"+str(match) in games:
-                cur = games["game" + str(match)]
-                send = cur.grab(pid)
-
-                packet.clear()
-                packet.write(2, 'pickup')
-                packet.write(3, xx)
-                packet.write(3, yy)
-                packet.send(send, packet)
-
-      if arr[0] == "hit":
-          game = readint(mes)
-          pn = readint(mes)
-          hit = readint(mes)
-          if "game" + str(game) in games:
-              cur = games["game" + str(game)]
-              chck = cur.hit(pn, hit)
-
-              players = cur.list()
-
-             # if chck:
-                #  for i in players:
-                #      packet.clear()
-                #      packet.write(2, 'end')
-            #          packet.send(i, packet)
-            #      games.pop("game"+str(game))
-
       if arr[0] == "end":
           game = readint(mes)
 
@@ -241,26 +229,6 @@ def server(port):
                   packet.write(2, 'end')
                   packet.send(i, packet)
               games.pop("game"+str(game))
-
-      if arr[0] == "shoot":
-          xx = readint(mes)
-          yy = readint(mes)
-          dir = readint(mes)
-          match = readint(mes)
-          pn = readint(mes)
-          type = readstring(mes)
-          if "game"+str(match) in games:
-              cur = games["game" + str(match)]
-
-              send = cur.grab(pn)
-
-              packet.clear()
-              packet.write(2, 'shoot')
-              packet.write(3, xx)
-              packet.write(3, yy)
-              packet.write(3, dir)
-              packet.write(2, type)
-              packet.send(send, packet)
 
       if packet.Buffer > 0:
           rec(mes)
